@@ -31,7 +31,7 @@ tbl_in %>%
   mutate(Longitude = str_replace(Longitude, ",", "."),
          Latitude = str_replace(Latitude, ",", ".")) %>% 
   mutate(Longitude = parse_number(Longitude),
-         Latitude = parse_number(Latitude)) -> tbl1_hkh
+         Latitude = parse_number(Latitude)) -> tbl_01_hkh
 
 
 # 2 rofental -------------------------------------------------------------------
@@ -41,16 +41,24 @@ tbl_in[1:3, ]  %>%
   mutate(Longitude = parse_number(Longitude),
          Latitude = parse_number(Latitude),
          Begin = year(Begin),
-         End = NA) -> tbl2_rofental
+         End = NA) -> tbl_02_rofental
 
 
 # 3 Geosphere Austria -------------------------------------------------------------
 
-# needs updated coords! or epsg info
-
-tbl_in <- read_xlsx(fn_in, all_sheets[3], skip = 4, col_names = names_cols)
-
-tbl3_geosphere
+tbl_in <- read_xlsx(fn_in, all_sheets[3], skip = 4, 
+                    col_names = c(names_cols, str_c("V", 1:3)))
+tbl_in %>% 
+  mutate(Latitude = str_c(str_sub(Latitude, 1, 2), ".", str_sub(Latitude, 3))) %>% 
+  mutate(Latitude = parse_number(Latitude)) %>% 
+  mutate(Longitude = if_else(Longitude < 0,
+                             str_c(str_sub(Longitude, 1, 3), ".", str_sub(Longitude, 4)),
+                             if_else(str_sub(Longitude, 1, 1) == "1",
+                                     str_c(str_sub(Longitude, 1, 2), ".", str_sub(Longitude, 3)),
+                                     str_c(str_sub(Longitude, 1, 1), ".", str_sub(Longitude, 2))))) %>% 
+  mutate(Longitude = parse_number(Longitude)) %>% 
+  mutate(Begin = year(ymd(Begin)),
+         End = year(ymd(End))) -> tbl_03_geosphere
 
 # 4 swiss alps ------------------------------------------------------------
 
@@ -61,44 +69,140 @@ tbl_in %>%
   mutate(Longitude = if_else(str_sub(Longitude, 1, 1) == "1",
                              str_c(str_sub(Longitude, 1, 2), ".", str_sub(Longitude, 3)),
                              str_c(str_sub(Longitude, 1, 1), ".", str_sub(Longitude, 2)))) %>% 
-  mutate(Longitude = parse_number(Longitude)) -> tbl4_swiss
+  mutate(Longitude = parse_number(Longitude)) -> tbl_04_swiss
   
 
 # 5 european alps tc2021 --------------------------------------------------
 
 tbl_in <- read_xlsx(fn_in, all_sheets[5], skip = 4, col_names = names_cols[1:11])
-tbl5_alps_tc2021 <- tbl_in
+tbl_05_alps_tc2021 <- tbl_in
 
 
 
 
 # 6 french alps -----------------------------------------------------------
 
-tbl_in <- read_xlsx(fn_in, all_sheets[6], skip = 4, col_names = names_cols)
+tbl_in <- read_xlsx(fn_in, all_sheets[6], skip = 4, col_names = names_cols, 
+                    na = c("", "now"))
 tbl_in %>% 
   mutate(Longitude = parse_number(Longitude, locale = locale(decimal_mark = ",")),
          Latitude = parse_number(Latitude),
          `Altitude (m)` = parse_number(`Altitude (m)`)) %>% 
   mutate(Latitude = if_else(Latitude > 90,
                             parse_number(str_c(str_sub(Latitude, 1, 2), ".", str_sub(Latitude, 3))),
-                            Latitude)) -> tbl6_french_alps
+                            Latitude)) -> tbl_06_french_alps
+
+
+
+# 7 Canada ----------------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[7], skip = 4, col_names = names_cols)
+tbl_07_canada <- tbl_in
+
+
+
+# 8 chilean andes ---------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[8], skip = 4, col_names = names_cols)
+tbl_08_chilean_andes <- tbl_in
+
+# 9 australian alps -------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[9], skip = 4, col_names = names_cols[2:16], 
+                    na = c("", "Ongoing"))
+tbl_in %>% 
+  mutate(Longitude = parse_number(Longitude),
+         Latitude = - parse_number(Latitude)) -> tbl_09_australian_alps
+
+
+# 10 pyrenees -------------------------------------------------------------
+
+
+tbl_in <- read_xlsx(fn_in, all_sheets[10], skip = 4, col_names = names_cols[2:16],
+                    na = c("", "now"))
+tbl_in %>% 
+  mutate(Longitude = Longitude %>% 
+           str_replace(",", ".") %>% 
+           str_replace("−", "-") %>% 
+           parse_number,
+         Begin = year(Begin),
+         End = year(End)) -> tbl_10_pyrenees
 
 
 
 
 
+# 11 corsica --------------------------------------------------------------
+
+col_types <- rep("guess", 15)
+col_types[names_cols[2:16] == "End"] <- "date"
+tbl_in <- read_xlsx(fn_in, all_sheets[11], skip = 4, col_names = names_cols[2:16], 
+                    na = c("", "now"), col_types = col_types)
+tbl_in %>% 
+  mutate(Begin = year(Begin),
+         End = year(End)) -> tbl_11_corsica
+# manual update 
+tbl_11_corsica[12, "End"] <- 2022
+tbl_11_corsica[15, "End"] <- 2017
 
 
+# 12 Dinaric Alps ---------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[12], skip = 4, col_names = names_cols[1:15])
+tbl_in %>% 
+  mutate(Longitude = parse_number(Longitude),
+         Latitude = parse_number(Latitude),
+         Begin = year(ymd(Begin))) -> tbl_12_dinaric_alps
+
+
+# 13 southern andes argentina ---------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[13], skip = 4, col_names = names_cols)
+tbl_in %>% 
+  mutate(Latitude = str_c(str_sub(Latitude, 1, 3), ".", str_sub(Latitude, 4))) %>% 
+  mutate(Latitude = parse_number(Latitude)) %>% 
+  mutate(Longitude = str_c(str_sub(Longitude, 1, 3), ".", str_sub(Longitude, 4))) %>% 
+  mutate(Longitude = parse_number(Longitude)) %>% 
+  mutate(Begin = year(ymd(Begin, truncated = 2)),
+         End = year(ymd(End, truncated = 2))) -> tbl_13_southern_andes_argentina
+  
+
+
+
+# 14 western carpathians (slovakia) ---------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[14], skip = 4, col_names = names_cols)
+tbl_14_slovakia <- tbl_in
+
+
+# combine -----------------------------------------------------------------
+
+tbl_all <- bind_rows(
+  tbl_01_hkh,
+  tbl_02_rofental,
+  tbl_03_geosphere,
+  tbl_04_swiss,
+  tbl_05_alps_tc2021,
+  tbl_06_french_alps,
+  tbl_07_canada,
+  tbl_08_chilean_andes,
+  tbl_09_australian_alps,
+  tbl_10_pyrenees,
+  tbl_11_corsica,
+  tbl_12_dinaric_alps,
+  tbl_13_southern_andes_argentina,
+  tbl_14_slovakia
+)
 
 
 
 # remove duplicates? ------------------------------------------------------
 
 # remove slf from tc2021
+tbl_all <- tbl_all %>% 
+  filter(!str_starts(ID, "CH_SLF_"))
 
-
-
-
+saveRDS(tbl_all, "data/inventory-01-read.rds")
 
   
 
