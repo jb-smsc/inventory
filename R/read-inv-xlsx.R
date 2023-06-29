@@ -31,7 +31,17 @@ tbl_in %>%
   mutate(Longitude = str_replace(Longitude, ",", "."),
          Latitude = str_replace(Latitude, ",", ".")) %>% 
   mutate(Longitude = parse_number(Longitude),
-         Latitude = parse_number(Latitude)) -> tbl_01_hkh
+         Latitude = parse_number(Latitude)) %>% 
+  mutate(long_old = Longitude, lat_old = Latitude) %>% 
+  mutate(Longitude = if_else(str_starts(ID, "NP_") & !is.na(ID),
+                             long_old,
+                             lat_old),
+         Latitude = if_else(str_starts(ID, "NP_") & !is.na(ID),
+                            lat_old,
+                            long_old)) %>% 
+  select(-long_old, -lat_old) %>% 
+  mutate(SWE = if_else(str_starts(ID, "SSS") & !is.na(ID), "YES", SWE),
+         `Depth of snowfall` = if_else(str_starts(ID, "SSS") & !is.na(ID), "YES", `Depth of snowfall`)) -> tbl_01_hkh
 
 
 # 2 rofental -------------------------------------------------------------------
@@ -48,15 +58,21 @@ tbl_in[1:3, ]  %>%
 
 tbl_in <- read_xlsx(fn_in, all_sheets[3], skip = 4, 
                     col_names = c(names_cols, str_c("V", 1:3)))
+
+dms2dec_austria <- function(x){
+  sign(x)
+  x_abs <- abs(x)
+  s <- str_sub(x_abs, start = - 2) %>% as.numeric
+  m <- str_sub(x_abs, start = - 4, end = -3) %>% as.numeric
+  d <- str_sub(x_abs, end = -5) %>% as.numeric
+  
+  dec <- sign(x) * (d + m/60 + s/3600)
+  dec
+}
+
 tbl_in %>% 
-  mutate(Latitude = str_c(str_sub(Latitude, 1, 2), ".", str_sub(Latitude, 3))) %>% 
-  mutate(Latitude = parse_number(Latitude)) %>% 
-  mutate(Longitude = if_else(Longitude < 0,
-                             str_c(str_sub(Longitude, 1, 3), ".", str_sub(Longitude, 4)),
-                             if_else(str_sub(Longitude, 1, 1) == "1",
-                                     str_c(str_sub(Longitude, 1, 2), ".", str_sub(Longitude, 3)),
-                                     str_c(str_sub(Longitude, 1, 1), ".", str_sub(Longitude, 2))))) %>% 
-  mutate(Longitude = parse_number(Longitude)) %>% 
+  mutate(Latitude = dms2dec_austria(Latitude)) %>% 
+  mutate(Longitude = dms2dec_austria(Longitude)) %>% 
   mutate(Begin = year(ymd(Begin)),
          End = year(ymd(End))) -> tbl_03_geosphere
 
@@ -177,7 +193,7 @@ tbl_14_slovakia <- tbl_in
 
 # combine -----------------------------------------------------------------
 
-tbl_all <- bind_rows(
+l_all <- list(
   tbl_01_hkh,
   tbl_02_rofental,
   tbl_03_geosphere,
@@ -194,13 +210,19 @@ tbl_all <- bind_rows(
   tbl_14_slovakia
 )
 
+names(l_all) <- all_sheets
+
+tbl_all <- bind_rows(l_all, .id = "sheet_name")
+
+# remove NA rows
+tbl_all <- tbl_all %>% filter(!is.na(Longitude))
 
 
 # remove duplicates? ------------------------------------------------------
 
 # remove slf from tc2021
 tbl_all <- tbl_all %>% 
-  filter(!str_starts(ID, "CH_SLF_"))
+  filter(!str_starts(ID, "CH_SLF_") | is.na(ID))
 
 saveRDS(tbl_all, "data/inventory-01-read.rds")
 
