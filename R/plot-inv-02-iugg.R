@@ -1,9 +1,10 @@
 # plot inventory
 
 library(dplyr)
+library(tidyr)
 library(forcats)
 library(sf)
-# library(tmap)
+library(tmap)
 library(ggplot2)
 
 tbl_inv <- readRDS("data/inventory-01-read.rds")
@@ -36,6 +37,7 @@ sf_inv_long <- sf_inv %>%
 # sf_inv_long %>% filter(is.na(obs_period))
   
 # overview plots ----------------------------------------------------------
+data("World")
 
 sf_inv_robin <- st_transform(sf_inv, "+proj=robin")
 sf_inv_long_robin <- st_transform(sf_inv_long, "+proj=robin")
@@ -48,44 +50,47 @@ world_robin <- st_transform(World, "+proj=robin")
 ggplot()+
   geom_sf(data = world_robin, fill = "grey95")+
   geom_sf(data = sf_inv_robin, pch = 20)+
-  coord_sf(xlim = st_bbox(sf_inv_robin)[c(1,3)],
+  coord_sf(#xlim = st_bbox(sf_inv_robin)[c(1,3)],
            ylim = st_bbox(sf_inv_robin)[c(2,4)])+
-  theme_minimal()
+  theme_minimal()+
+  theme(plot.background = element_rect(fill = "white", linetype = "blank"))
 
 ggsave("fig/inv-iugg-01-all.png",
        width = 8, height = 4)
 
 
 
-# facet by variable -------------------------------------------------------
+## facet by variable -------------------------------------------------------
 
 
 ggplot()+
   geom_sf(data = world_robin, fill = "grey95")+
   geom_sf(data = sf_inv_long_robin, pch = 20)+
-  coord_sf(xlim = st_bbox(sf_inv_long_robin)[c(1,3)],
+  coord_sf(#xlim = st_bbox(sf_inv_long_robin)[c(1,3)],
            ylim = st_bbox(sf_inv_long_robin)[c(2,4)])+
   facet_wrap(~ snow_variable)+
-  theme_minimal()
+  theme_minimal()+
+  theme(plot.background = element_rect(fill = "white", linetype = "blank"))
 
 ggsave("fig/inv-iugg-02-by-var.png",
        width = 16, height = 6)
 
-# facet by length ---------------------------------------------------------
+## facet by length ---------------------------------------------------------
 
 ggplot()+
   geom_sf(data = world_robin, fill = "grey95")+
   geom_sf(data = sf_inv_long_robin, pch = 20)+
-  coord_sf(xlim = st_bbox(sf_inv_long_robin)[c(1,3)],
+  coord_sf(#xlim = st_bbox(sf_inv_long_robin)[c(1,3)],
            ylim = st_bbox(sf_inv_long_robin)[c(2,4)])+
   facet_wrap(~ obs_period_fct)+
   theme_minimal()+
+  theme(plot.background = element_rect(fill = "white", linetype = "blank"))+
   ggtitle("Years of observations (theoretical, including gaps)")
 
 ggsave("fig/inv-iugg-03-by-length.png",
        width = 16, height = 8)
 
-# facet by var and length -------------------------------------------------
+## facet by var and length -------------------------------------------------
 # 
 # ggplot()+
 #   geom_sf(data = world_robin, fill = "grey95")+
@@ -100,3 +105,41 @@ ggsave("fig/inv-iugg-03-by-length.png",
 #        width = 16, height = 8)
 
 
+
+# comparison NH-SWE -------------------------------------------------------
+
+tbl_meta_nhswe <- readr::read_csv("data-raw/NH_SWE_METADATA.csv")
+sf_nhswe <- st_as_sf(tbl_meta_nhswe,
+                     crs = 4326,
+                     coords = c("LON", "LAT"))
+# mapview::mapview(sf_nhswe)
+sf_nhswe_robin <- st_transform(sf_nhswe, "+proj=robin")
+
+ggplot()+
+  geom_sf(data = world_robin, fill = "grey95")+
+  geom_sf(data = sf_nhswe_robin, pch = 20)+
+  coord_sf(#xlim = st_bbox(sf_inv_robin)[c(1,3)],
+    ylim = st_bbox(sf_inv_robin)[c(2,4)])+
+  theme_minimal()+
+  theme(plot.background = element_rect(fill = "white", linetype = "blank"))
+
+ggsave("fig/inv-nhswe-01-all.png",
+       width = 8, height = 4)
+
+
+
+## interactive tmap --------------------------------------------------------
+
+tmap_mode("view")
+
+# cols <- scales::hue_pal()(4)
+cols <- scales::brewer_pal(palette = "Set1")(4)
+
+tm1 <- tm_shape(sf_inv)+
+  tm_dots(col = cols[1])+
+  tm_shape(sf_nhswe)+
+  tm_dots(col = cols[2])+
+  tm_basemap()+
+  tm_add_legend(labels = c("JB-SMSC", "NH-SWE"), col = cols[1:2])
+
+tmap_save(tm1, filename = "fig/inv-comparison.html")
