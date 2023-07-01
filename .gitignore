@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 fig/
+data-raw/ghcnd-inventory.txt

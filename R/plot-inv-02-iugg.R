@@ -143,3 +143,45 @@ tm1 <- tm_shape(sf_inv)+
   tm_add_legend(labels = c("JB-SMSC", "NH-SWE"), col = cols[1:2])
 
 tmap_save(tm1, filename = "fig/inv-comparison.html")
+
+
+
+# ghcnd -------------------------------------------------------------------
+
+tbl_ghcnd <- readr::read_fwf("data-raw/ghcnd-inventory.txt")
+names(tbl_ghcnd) <- c("station_id", "lat", "lon", "element", "begin", "end")
+
+tbl_ghcnd_snow <- tbl_ghcnd %>% 
+  filter(element %in% c("SNOW", "SNWD")) %>% 
+  filter(begin != end)
+
+sf_ghcnd <- st_as_sf(tbl_ghcnd_snow,
+                     crs = 4326,
+                     coords = c("lon", "lat"))
+
+sf_ghcnd_robin <- st_transform(sf_ghcnd, "+proj=robin")
+
+
+
+ggplot()+
+  geom_sf(data = world_robin, fill = "grey95")+
+  geom_sf(data = sf_ghcnd_robin %>% filter(element == "SNWD"), pch = 20)+
+  coord_sf(#xlim = st_bbox(sf_inv_robin)[c(1,3)],
+    ylim = st_bbox(sf_ghcnd_robin)[c(2,4)])+
+  theme_minimal()+
+  theme(plot.background = element_rect(fill = "white", linetype = "blank"))
+
+ggsave("fig/inv-ghcnd-01-HS.png",
+       width = 8, height = 4)
+
+
+ggplot()+
+  geom_sf(data = world_robin, fill = "grey95")+
+  geom_sf(data = sf_ghcnd_robin %>% filter(element == "SNOW"), pch = 20)+
+  coord_sf(#xlim = st_bbox(sf_inv_robin)[c(1,3)],
+    ylim = st_bbox(sf_ghcnd_robin)[c(2,4)])+
+  theme_minimal()+
+  theme(plot.background = element_rect(fill = "white", linetype = "blank"))
+
+ggsave("fig/inv-ghcnd-02-HN.png",
+       width = 8, height = 4)
