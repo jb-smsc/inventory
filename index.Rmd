@@ -1,0 +1,48 @@
+---
+title: "JB-SMSC Inventory"
+output: 
+  flexdashboard::flex_dashboard:
+    vertical_layout: fill
+    theme: 
+      version: 5
+      bootswatch: morph
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(dplyr)
+library(stringr)
+library(sf)
+library(leaflet)
+library(htmltools)
+```
+
+## Column 
+
+### Map
+
+```{r}
+dat <- readRDS(here::here("data/inventory-01-read.rds"))
+dat_sub <- dat %>% 
+  rename(station_name = "Station name",
+         altitude = "Altitude (m)") %>% 
+  select(station_name:altitude) %>% 
+  mutate(ll = str_c(station_name, ", ", altitude, "m"))
+sf_sub <- st_as_sf(dat_sub, coords = c("Longitude", "Latitude"), crs = 4326)
+
+leaflet(sf_sub) %>% 
+  # addTiles() %>% 
+  addProviderTiles("CartoDB.Positron", group = "CartoDB") %>% 
+  addProviderTiles("Esri.WorldTopoMap", group = "Topomap") %>% 
+  addProviderTiles("Esri.WorldImagery", group = "WorldImagery") %>% 
+  addCircleMarkers(
+    clusterOptions = markerClusterOptions(),
+    label = ~htmlEscape(ll)
+  ) %>% 
+  addLayersControl(
+    baseGroups = c("CartoDB", "Topomap", "WorldImagery"),
+    position = "topright",
+    options = layersControlOptions(collapsed = FALSE)
+  ) 
+```
+

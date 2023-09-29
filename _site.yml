@@ -1,0 +1,3 @@
+name: "Inventory"
+output_dir: docs
+exclude: ["data","data-raw","fig","R"]
