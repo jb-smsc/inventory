@@ -8,7 +8,7 @@ library(readr)
 library(stringr)
 # library(purrr)
 
-fn_in <- "data-raw/copy_2023-06-27_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
+fn_in <- "data-raw/copy_2023-09-29_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
 
 all_sheets <- excel_sheets(fn_in)
 all_sheets <- all_sheets[all_sheets != "Snow information_template"] # template
@@ -60,7 +60,7 @@ tbl_in <- read_xlsx(fn_in, all_sheets[3], skip = 4,
                     col_names = c(names_cols, str_c("V", 1:3)))
 
 dms2dec_austria <- function(x){
-  sign(x)
+  # sign(x)
   x_abs <- abs(x)
   s <- str_sub(x_abs, start = - 2) %>% as.numeric
   m <- str_sub(x_abs, start = - 4, end = -3) %>% as.numeric
@@ -157,9 +157,6 @@ tbl_in <- read_xlsx(fn_in, all_sheets[11], skip = 4, col_names = names_cols[2:16
 tbl_in %>% 
   mutate(Begin = year(Begin),
          End = year(End)) -> tbl_11_corsica
-# manual update 
-tbl_11_corsica[12, "End"] <- 2022
-tbl_11_corsica[15, "End"] <- 2017
 
 
 # 12 Dinaric Alps ---------------------------------------------------------
@@ -191,6 +188,56 @@ tbl_in <- read_xlsx(fn_in, all_sheets[14], skip = 4, col_names = names_cols)
 tbl_14_slovakia <- tbl_in
 
 
+
+# 15 atlas ----------------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[15], skip = 4, col_names = names_cols[2:16])
+tbl_15_atlas <- tbl_in
+
+
+
+
+# 16 Mt Lebanon -----------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[16], skip = 4, col_names = names_cols)
+tbl_in %>% 
+  mutate(Latitude = parse_number(Latitude)) %>% 
+  mutate(Longitude = parse_number(Longitude))  -> tbl_16_mt_lebanon
+
+
+# 17 spain ----------------------------------------------------------------
+
+dms2dec_spain <- function(x){
+  s <- str_sub(x, start = - 2) %>% as.numeric
+  m <- str_sub(x, start = - 4, end = -3) %>% as.numeric
+  d <- str_sub(x, end = -5) %>% as.numeric
+  d + m/60 + s/3600
+}
+
+dms_lon_spain <- function(x){
+  # "Si, grados, minutos y segundos y en el caso de la longitud se añade al final 
+  # un 1 para orientación E o 2 para W."
+  EW <- str_sub(x, start = -1)
+  if_else(EW == "1", 1, -1)
+  s <- str_sub(x, start = -3, end = -2) %>% as.numeric
+  m <- str_sub(x, start = -5, end = -4) %>% as.numeric
+  m[is.na(m)] <- 0
+  d <- str_sub(x, end = -6) %>% as.numeric
+  d[is.na(d)] <- 0
+  
+  if_else(EW == "1", 1, -1) * (d + m/60 + s/3600)
+}
+
+tbl_in <- read_xlsx(fn_in, all_sheets[17], skip = 4, col_names = names_cols)
+tbl_in %>% 
+  mutate(Begin = year(Begin),
+         Latitude = dms2dec_spain(Latitude),
+         Longitude = dms_lon_spain(Longitude)) -> tbl_17_spain
+  
+
+
+
+
 # combine -----------------------------------------------------------------
 
 l_all <- list(
@@ -207,7 +254,10 @@ l_all <- list(
   tbl_11_corsica,
   tbl_12_dinaric_alps,
   tbl_13_southern_andes_argentina,
-  tbl_14_slovakia
+  tbl_14_slovakia,
+  tbl_15_atlas,
+  tbl_16_mt_lebanon,
+  tbl_17_spain
 )
 
 names(l_all) <- all_sheets
