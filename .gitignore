@@ -4,3 +4,4 @@
 .Ruserdata
 fig/
 data-raw/ghcnd-inventory.txt
+temp-backup/
