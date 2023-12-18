@@ -8,7 +8,7 @@ library(readr)
 library(stringr)
 # library(purrr)
 
-fn_in <- "data-raw/copy_2023-09-29_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
+fn_in <- "data-raw/copy_2023-12-18_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
 
 all_sheets <- excel_sheets(fn_in)
 all_sheets <- all_sheets[all_sheets != "Snow information_template"] # template
@@ -236,7 +236,24 @@ tbl_in %>%
   
 
 
+# 18 Greenland -----------------------------------------------------------
 
+tbl_in <- read_xlsx(fn_in, all_sheets[18], skip = 4, col_names = names_cols)
+tbl_in %>% 
+  mutate(Begin = year(Begin), 
+         End = year(End),
+         Longitude = as.numeric(Longitude), 
+         Latitude = as.numeric(Latitude)) -> tbl_18_greenland
+
+
+
+# 19 Japanese mountains -----------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[19], skip = 4, col_names = names_cols)
+# tbl_in %>% 
+#   mutate(Begin = year(Begin), End = year(End)) -> tbl_19_japanese_mountains
+# 
+tbl_19_japanese_mountains <- tibble()
 
 # combine -----------------------------------------------------------------
 
@@ -257,7 +274,9 @@ l_all <- list(
   tbl_14_slovakia,
   tbl_15_atlas,
   tbl_16_mt_lebanon,
-  tbl_17_spain
+  tbl_17_spain,
+  tbl_18_greenland,
+  tbl_19_japanese_mountains
 )
 
 names(l_all) <- all_sheets
