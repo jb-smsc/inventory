@@ -295,6 +295,6 @@ tbl_all <- tbl_all %>%
 
 saveRDS(tbl_all, "data/inventory-01-read.rds")
 
-  
+
 
 
