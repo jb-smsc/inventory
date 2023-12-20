@@ -250,10 +250,10 @@ tbl_in %>%
 # 19 Japanese mountains -----------------------------------------------------------
 
 tbl_in <- read_xlsx(fn_in, all_sheets[19], skip = 4, col_names = names_cols)
-# tbl_in %>% 
-#   mutate(Begin = year(Begin), End = year(End)) -> tbl_19_japanese_mountains
-# 
-tbl_19_japanese_mountains <- tibble()
+tbl_in %>%
+  mutate(Begin = year(my(Begin)),
+         Longitude = as.numeric(Longitude), 
+         Latitude = as.numeric(Latitude)) -> tbl_19_japanese_mountains
 
 # combine -----------------------------------------------------------------
 
@@ -296,53 +296,54 @@ tbl_all <- tbl_all %>%
 
 # clean columns: freq to albedo  -----------------------------------------------------------
 
-tbl_all$Frequency %>% str_to_lower() %>% table(useNA = "a")
-tbl_all$Type %>% str_to_lower() %>%
-  str_replace("^a$", "automatic") %>% 
-  str_replace("^auto$", "automatic") %>% 
-  str_replace("^m$", "manual") %>% 
-  str_replace(fixed("automatic/manual"), "manual/automatic") %>% 
-  str_replace(fixed("manual to automatic"), "manual/automatic") %>% 
-  str_replace(fixed("manual snow course"), "manual") %>% 
-  str_replace(fixed("undefined & ruler"), "manual") %>% 
-  str_replace(fixed("undefined & sr50"), "automatic") %>% 
-  str_replace(fixed("undefined, ruler & sr50"), "manual/automatic") %>% 
-  str_replace(fixed("undefined"), NA) %>% 
-  table(useNA = "a")
-tbl_all %>% filter(is.na(Type))
-tbl_all %>% filter(Type == "automatic/manual")
-tbl_all %>% filter(Type == "manual to automatic")
-tbl_all %>% filter(Type == "undefined")
-tbl_all %>% filter(Type == "undefined & ruler")
-
-tbl_all$`Snow depth` %>% 
-  str_replace("^x|X$", "YES") %>% 
-  str_replace(fixed("Campbell SR50"), "YES") %>% 
-  str_replace(fixed("Jenoptik/Lufft SHM30"), "YES") %>% 
-  str_replace(fixed("Lufft SHM31"), "YES") %>% 
-  table(useNA = "a")
-tbl_all %>% filter(is.na(`Snow depth`))
-
-tbl_all$`Depth of snowfall` %>% 
-  str_replace("^x|X$", "YES") %>% 
-  table(useNA = "a")
-
-tbl_all$SWE %>% 
-  str_replace("^x|X$", "YES") %>% 
-  table(useNA = "a")
-
-tbl_all$`Bulk snow density` %>% 
-  str_replace("^x|X$", "YES") %>% 
-  str_replace(fixed("NO*"), "YES") %>% 
-  str_replace(fixed("Derive from HS and SWE"), "YES") %>% 
-  str_replace(fixed("manually measured in snow pit once a year around May, 1st"), "YES") %>% 
-  table(useNA = "a")
-tbl_all %>% filter(`Bulk snow density` == "NO*")
-
-tbl_all$`Snow albedo` %>% 
-  str_replace("^x|X$", "YES") %>% 
-  str_replace(fixed("Kipp & Zonen Net Radiometer CNR 4"), "YES") %>% 
-  table(useNA = "a")
+# manual testing
+# tbl_all$Frequency %>% str_to_lower() %>% table(useNA = "a")
+# tbl_all$Type %>% str_to_lower() %>%
+#   str_replace("^a$", "automatic") %>% 
+#   str_replace("^auto$", "automatic") %>% 
+#   str_replace("^m$", "manual") %>% 
+#   str_replace(fixed("automatic/manual"), "manual/automatic") %>% 
+#   str_replace(fixed("manual to automatic"), "manual/automatic") %>% 
+#   str_replace(fixed("manual snow course"), "manual") %>% 
+#   str_replace(fixed("undefined & ruler"), "manual") %>% 
+#   str_replace(fixed("undefined & sr50"), "automatic") %>% 
+#   str_replace(fixed("undefined, ruler & sr50"), "manual/automatic") %>% 
+#   str_replace(fixed("undefined"), NA) %>% 
+#   table(useNA = "a")
+# tbl_all %>% filter(is.na(Type))
+# tbl_all %>% filter(Type == "automatic/manual")
+# tbl_all %>% filter(Type == "manual to automatic")
+# tbl_all %>% filter(Type == "undefined")
+# tbl_all %>% filter(Type == "undefined & ruler")
+# 
+# tbl_all$`Snow depth` %>% 
+#   str_replace("^x|X$", "YES") %>% 
+#   str_replace(fixed("Campbell SR50"), "YES") %>% 
+#   str_replace(fixed("Jenoptik/Lufft SHM30"), "YES") %>% 
+#   str_replace(fixed("Lufft SHM31"), "YES") %>% 
+#   table(useNA = "a")
+# tbl_all %>% filter(is.na(`Snow depth`))
+# 
+# tbl_all$`Depth of snowfall` %>% 
+#   str_replace("^x|X$", "YES") %>% 
+#   table(useNA = "a")
+# 
+# tbl_all$SWE %>% 
+#   str_replace("^x|X$", "YES") %>% 
+#   table(useNA = "a")
+# 
+# tbl_all$`Bulk snow density` %>% 
+#   str_replace("^x|X$", "YES") %>% 
+#   str_replace(fixed("NO*"), "YES") %>% 
+#   str_replace(fixed("Derive from HS and SWE"), "YES") %>% 
+#   str_replace(fixed("manually measured in snow pit once a year around May, 1st"), "YES") %>% 
+#   table(useNA = "a")
+# tbl_all %>% filter(`Bulk snow density` == "NO*")
+# 
+# tbl_all$`Snow albedo` %>% 
+#   str_replace("^x|X$", "YES") %>% 
+#   str_replace(fixed("Kipp & Zonen Net Radiometer CNR 4"), "YES") %>% 
+#   table(useNA = "a")
 
 
 # all-in-one
@@ -394,24 +395,40 @@ tbl_all2 %>%
 
 # get missing elevation from public DEM -----------------------------------
 
-sf_elev_missing <- tbl_all2 %>% 
-  filter(is.na(`Altitude (m)`)) %>% 
-  select(sheet_name:Latitude) %>% 
-  sf::st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
-
-# might take very long (depending on internet connection!), decrease z (zoom level)
-# z=5 ~ 3.5 km resolution at lat=45
-# z=6 ~ 1.7 km resolution at lat=45
-# z=7 ~ 800m resolution at lat=45
-tbl_elev <- elevatr::get_elev_point(sf_elev_missing, src = "aws", z = 6)
+# prefill from previous version
+tbl_old <- readRDS("data/inventory-01-read.rds")
 
 tbl_all3 <- tbl_all2 %>% 
   rows_patch(
-    tbl_elev %>% 
-      sf::st_drop_geometry() %>% 
-      select(sheet_name, ID, `Station name`, `Altitude (m)` = elevation),
-    by = c("sheet_name", "ID", "Station name")
+    tbl_old %>% 
+      select(sheet_name, ID, `Station name`, `Altitude (m)`, 
+             Begin, End, `Snow depth`, `Depth of snowfall`),
+    by = c("sheet_name", "ID", "Station name", 
+           "Begin", "End", "Snow depth", "Depth of snowfall")
   )
+
+if(any(is.na(tbl_all3$`Altitude (m)`))){
+  sf_elev_missing <- tbl_all3 %>% 
+    filter(is.na(`Altitude (m)`)) %>% 
+    select(sheet_name:Latitude) %>% 
+    sf::st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
+  
+  # might take very long (depending on internet connection!), decrease z (zoom level)
+  # z=5 ~ 3.5 km resolution at lat=45
+  # z=6 ~ 1.7 km resolution at lat=45
+  # z=7 ~ 800m resolution at lat=45
+  tbl_elev <- elevatr::get_elev_point(sf_elev_missing, src = "aws", z = 6)
+  
+  tbl_out <- tbl_all3 %>% 
+    rows_patch(
+      tbl_elev %>% 
+        sf::st_drop_geometry() %>% 
+        select(sheet_name, ID, `Station name`, `Altitude (m)` = elevation),
+      by = c("sheet_name", "ID", "Station name")
+    )
+} else {
+  tbl_out <- tbl_all3
+}
 
 
 # save --------------------------------------------------------------------
