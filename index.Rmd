@@ -17,6 +17,8 @@ library(leaflet)
 library(htmltools)
 ```
 
+# Map
+
 ## Column 
 
 ### Map
@@ -26,8 +28,16 @@ dat <- readRDS(here::here("data/inventory-01-read.rds"))
 dat_sub <- dat %>% 
   rename(station_name = "Station name",
          altitude = "Altitude (m)") %>% 
-  select(station_name:altitude) %>% 
-  mutate(ll = str_c(station_name, ", ", altitude, "m"))
+  mutate(across(`Snow depth`:`Snow albedo`, 
+                \(x) if_else(x == "YES", cur_column(), NA))) %>% 
+  tidyr::unite("ll_vars", `Snow depth`:`Snow albedo`, 
+               sep = ", ", na.rm = T, remove = F) %>% 
+  select(station_name:altitude, type = Type, freq = Frequency, ll_vars) %>% 
+  mutate(ll1 = str_c(station_name, ", ", altitude, "m"),
+         ll2 = str_c(station_name, ", ", altitude, "m","<br/>",
+                     type, "<br/>", 
+                     freq, "<br/>",
+                     ll_vars))
 sf_sub <- st_as_sf(dat_sub, coords = c("Longitude", "Latitude"), crs = 4326)
 
 leaflet(sf_sub) %>% 
@@ -37,12 +47,36 @@ leaflet(sf_sub) %>%
   addProviderTiles("Esri.WorldImagery", group = "WorldImagery") %>% 
   addCircleMarkers(
     clusterOptions = markerClusterOptions(),
-    label = ~htmlEscape(ll)
+    label = lapply(sf_sub$ll2, HTML)
   ) %>% 
   addLayersControl(
-    baseGroups = c("CartoDB", "Topomap", "WorldImagery"),
+    baseGroups = c("Topomap", "CartoDB", "WorldImagery"),
     position = "topright",
     options = layersControlOptions(collapsed = FALSE)
   ) 
+```
+
+# Table
+
+## Column 
+
+### Table
+
+
+```{r}
+dat_header <- readRDS(here::here("data/inventory-02-header.rds"))
+
+dat_table <- dat %>% 
+  group_by(sheet_name) %>% 
+  summarise(across(`Snow depth`:`Snow albedo`, \(x) sum(x == "YES"))) %>% 
+  left_join(dat_header)
+
+dat_table %>% 
+  select(`Excel Sheet` = sheet_name, 
+         Region = region, 
+         Expert = creator_expert, 
+         `Snow depth`:`Snow albedo`) %>% 
+  # knitr::kable()
+  DT::datatable(options = list(iDisplayLength = 25))
 ```
 
