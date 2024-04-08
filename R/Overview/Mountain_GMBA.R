@@ -230,10 +230,10 @@ library("rnaturalearth")
 # Load the country borders
 world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")
 # Perform a spatial join to determine the country of each station
-inventory <- st_join(inventory, world)
+inventory_country <- st_join(inventory, world)
 # Count the number of stations per country
 library("rnaturalearth")
-stations_per_country <- inventory %>%
+stations_per_country <- inventory_country %>%
   group_by(name) %>%
   summarise(n = n(), .groups = 'drop')
 # Sort the data in descending order
@@ -244,9 +244,9 @@ stations_per_country <- stations_per_country %>%
 # Load the country borders
 world$continent <- countrycode(world$iso_a3, "iso3c", "continent")
 # Perform a spatial join to determine the continent of each station
-inventory <- st_join(inventory, world)
+inventory_continent <- st_join(inventory, world)
 # Count the number of stations per continent
-stations_per_continent <- inventory %>%
+stations_per_continent <- inventory_continent %>%
   group_by(continent) %>%
   summarise(n = n(), .groups = 'drop')
 # Sort the data in descending order
