@@ -22,6 +22,7 @@ if (!require(dplyr)) {
 if (!require(rnaturalearth)) {
   install.packages("rnaturalearth")
 }
+
 if (!require(countrycode)) {
   install.packages("countrycode")
 }
@@ -38,7 +39,7 @@ library("countrycode")
 library("rnaturalearth")
 
 # Save location
-save_l <- "R/Overview/Finished/"
+save_l <- "Overview_Finished/"
 
 # Preparation
 # Read in the dataset
@@ -193,8 +194,6 @@ df_m05 <- sort_dataframe(df_m05)
 
 
 
-
-
 #Theme function for Diagrams
 my_theme <- function() {
   theme_linedraw() +
@@ -224,8 +223,6 @@ ggsave(paste0(save_l, "height_of_NA_stations_Level01.png"), plot = height_plot, 
 
 
 ### Countries where stations are located. Also stations that are not intersected with GMBA
-# Install package
-#install.packages("rnaturalearthdata")
 library("rnaturalearth")
 # Load the country borders
 world <- rnaturalearth::ne_countries(scale = "medium", returnclass = "sf")

@@ -1,5 +1,5 @@
 # Save location
-save_l <- "R/Overview/Finished/"
+save_l <- "Overview_Finished/"
 
 # Load packages
 if (!require(writexl)) {
