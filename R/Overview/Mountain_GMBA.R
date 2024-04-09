@@ -66,11 +66,11 @@ calculate_data <- function(level) {
     # Select rows where 'Level' is equal to the current region
     selected_region <- subset(inventory_GMBA, inventory_GMBA[[level]] == region)
     # Add up the areas of these rows
-    total_area <- sum(selected_region$Area, na.rm = TRUE)
+    total_area_km2 <- sum(selected_region$Area, na.rm = TRUE)
     # Calculate the average altitude for the current region
     avg_altitude <- mean(selected_region$`Altitude (m)`, na.rm = TRUE)
     # Add Area and average altitude to the dataframe
-    Area <- rbind(Area, data.frame(Region = region, total_area = total_area, AvgAltitude = avg_altitude))
+    Area <- rbind(Area, data.frame(Region = region, total_area_km2 = total_area_km2, AvgAltitude = avg_altitude))
   }
   # Take unique data
   mount_L <- table(inventory_GMBA[[level]])
@@ -81,7 +81,7 @@ calculate_data <- function(level) {
   # Insert the area information into df_m
   df_m <- merge(df_m, Area, by = "Region", all.x = TRUE)
   # Create a new column 'km^2/station' that divides the area by the number of points
-  df_m$`km^2/station` <- df_m$total_area / df_m$Counts
+  df_m$`km^2/station` <- df_m$total_area_km2 / df_m$Counts
   # Add the NA count as an additional row in df_m
   na_df <- data.frame(Region = "NA", Counts = na_count, stringsAsFactors = FALSE)
   na_df[setdiff(names(df_m), names(na_df))] <- NA
