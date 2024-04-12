@@ -241,6 +241,10 @@ stations_per_country <- inventory_country %>%
 # Sort the data in descending order
 stations_per_country <- stations_per_country %>%
   arrange(desc(n))
+# NA Staions at end of df
+stations_per_country <- stations_per_country %>%
+  arrange(is.na(name), desc(n))
+
 
 ### Continents where stations are located. Also stations that are not intersected with GMBA
 # Load the country borders
@@ -254,6 +258,9 @@ stations_per_continent <- inventory_continent %>%
 # Sort the data in descending order
 stations_per_continent <- stations_per_continent %>%
   arrange(desc(n))
+# NA Staions at end of df
+stations_per_continent <- stations_per_continent %>%
+  arrange(is.na(continent), desc(n))
 
 
 # Create list
