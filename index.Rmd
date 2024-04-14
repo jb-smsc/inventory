@@ -21,6 +21,8 @@ library(htmltools)
 
 ```{r data jb-smsc}
 dat <- readRDS(here::here("data/inventory-01-read.rds"))
+sf_jb <- st_as_sf(dat, coords = c("Longitude", "Latitude"), crs = 4326)
+
 dat_sub <- dat %>% 
   rename(station_name = "Station name",
          altitude = "Altitude (m)") %>% 
@@ -29,6 +31,7 @@ dat_sub <- dat %>%
   tidyr::unite("ll_vars", `Snow depth`:`Snow albedo`, 
                sep = ", ", na.rm = T, remove = F) %>% 
   select(station_name:altitude, type = Type, freq = Frequency, ll_vars, Begin, End) %>%
+  mutate(across(`type`:`End`, \(x) str_replace_na(x, ""))) %>% 
   mutate(ll1 = str_c(station_name, ", ", altitude, "m"),
          ll2 = str_c(station_name, ", ", altitude, "m","<br/>",
                      Begin, "-", End, "</br>",
@@ -36,6 +39,8 @@ dat_sub <- dat %>%
                      freq, "<br/>",
                      ll_vars))
 sf_sub <- st_as_sf(dat_sub, coords = c("Longitude", "Latitude"), crs = 4326)
+
+stopifnot(sf_sub$ll2 %>% is.na %>% sum == 0)
 ```
 
 ```{r data nh-swe}
@@ -47,6 +52,9 @@ sf_nhswe_sub <- sf_nhswe %>%
   mutate(ll2 = str_c(STANAME, ", ", ELEV, "m","<br/>",
                      START, "-", END, "<br/>", 
                      VALIDYEARS, " valid years"))
+
+
+stopifnot(sf_nhswe_sub$ll2 %>% is.na %>% sum == 0)
 ```
 
 ```{r data esb}
@@ -63,16 +71,20 @@ sf_esb_sub <- sf_esb %>%
   mutate(man_auto = if_else(AUTOMATIC == 1 & MANUAL == 0, "automatic", 
                             if_else(AUTOMATIC == 0 & MANUAL == 1, "manual", 
                                     "manual & automatic"))) %>% 
-  mutate(altitude = if_else(!is.na(altitude), as.character(round(altitude)), "---"),
-         interval_h = if_else(!is.na(interval_h), as.character(interval_h), "???"),
-         start_year = if_else(!is.na(start_year), as.character(start_year), "???")) %>% 
+  mutate(across(station_name:interval_h, \(x) str_replace_na(x, "???"))) %>% 
   select(station_name:start_year, man_auto, variable, interval_h) %>% 
   mutate(ll2 = str_c(station_name, ", ", altitude, "m","<br/>",
                      start_year, "-", "<br/>", 
                      man_auto, "<br/>", 
                      "every ", interval_h, " hour(s)", "<br/>",
                      variable))
+
+
+stopifnot(sf_esb_sub$ll2 %>% is.na %>% sum == 0)
+# sf_esb_sub %>% filter(is.na(ll2))
+
 ```
+
 
 # Map
 
@@ -131,6 +143,22 @@ dat_table %>%
 
 ### Map (JB-SMSC, NH-SWE, ESB)
 
+```{r separate datasets by variable}
+
+sf_jb_hs <- sf_sub %>% filter(str_detect(ll_vars, fixed("Snow depth")))
+sf_jb_hn <- sf_sub %>% filter(str_detect(ll_vars, fixed("Depth of snowfall")))
+sf_jb_swe <- sf_sub %>% filter(str_detect(ll_vars, fixed("SWE")))
+sf_jb_rho <- sf_sub %>% filter(str_detect(ll_vars, fixed("Bulk snow density")))
+sf_jb_al <- sf_sub %>% filter(str_detect(ll_vars, fixed("Snow albedo")))
+
+sf_esb_hs <- sf_esb_sub %>% filter(variable == "Snow Depth (HS)")
+sf_esb_hn <- sf_esb_sub %>% filter(variable == "Depth of Snowfall (HN)")
+sf_esb_swe <- sf_esb_sub %>% filter(variable == "WaterEquivalentOfSnowCover(SWE)")
+
+```
+
+
+
 ```{r}
 
 cols <- scales::brewer_pal(palette = "Dark2")(3)
@@ -141,36 +169,84 @@ leaflet() %>%
   addProviderTiles("CartoDB.Positron", group = "CartoDB") %>% 
   addProviderTiles("Esri.WorldTopoMap", group = "Topomap") %>% 
   addProviderTiles("Esri.WorldImagery", group = "WorldImagery") %>% 
+  
   addCircles(
-    data = sf_sub,
-    group = leg_labels[1],
+    data = sf_jb_hs,
+    group = leg_labels[1] %>% str_c(": Snow depth"),
     color = cols[1],
-    label = lapply(sf_sub$ll2, HTML)
+    label = lapply(sf_jb_hs$ll2, HTML)
   ) %>% 
+    addCircles(
+    data = sf_jb_hn,
+    group = leg_labels[1] %>% str_c(": Depth of snowfall"),
+    color = cols[1],
+    label = lapply(sf_jb_hn$ll2, HTML)
+  ) %>% 
+    addCircles(
+    data = sf_jb_swe,
+    group = leg_labels[1] %>% str_c(": SWE"),
+    color = cols[1],
+    label = lapply(sf_jb_swe$ll2, HTML)
+  ) %>% 
+    addCircles(
+    data = sf_jb_rho,
+    group = leg_labels[1] %>% str_c(": Bulk snow density"),
+    color = cols[1],
+    label = lapply(sf_jb_rho$ll2, HTML)
+  ) %>% 
+    addCircles(
+    data = sf_jb_al,
+    group = leg_labels[1] %>% str_c(": Snow albedo"),
+    color = cols[1],
+    label = lapply(sf_jb_al$ll2, HTML)
+  ) %>% 
+  
+  
   addCircles(
     data = sf_nhswe_sub,
     group = leg_labels[2],
     color = cols[2],
     label = lapply(sf_nhswe_sub$ll2, HTML)
   ) %>% 
+  
+  
   addCircles(
-    data = sf_esb_sub,
-    group = leg_labels[3],
+    data = sf_esb_hs,
+    group = leg_labels[3] %>% str_c(": Snow Depth (HS)"),
     color = cols[3],
-    label = lapply(sf_esb_sub$ll2, HTML)
+    label = lapply(sf_esb_hs$ll2, HTML)
   ) %>% 
+    addCircles(
+    data = sf_esb_hn,
+    group = leg_labels[3] %>% str_c(": Depth of Snowfall (HN)"),
+    color = cols[3],
+    label = lapply(sf_esb_hn$ll2, HTML)
+  ) %>% 
+    addCircles(
+    data = sf_esb_swe,
+    group = leg_labels[3] %>% str_c(": WaterEquivalentOfSnowCover(SWE)"),
+    color = cols[3],
+    label = lapply(sf_esb_swe$ll2, HTML)
+  ) %>% 
+  
   addLayersControl(
     baseGroups = c("Topomap", "CartoDB", "WorldImagery"),
     position = "topright",
-    overlayGroups = leg_labels,
+    overlayGroups = c(
+      str_c(leg_labels[1], ": ", c("Snow depth", "Depth of snowfall", "SWE",  "Bulk snow density", "Snow albedo")),
+      leg_labels[2],
+      str_c(leg_labels[3], ": ", c("Snow Depth (HS)", "Depth of Snowfall (HN)", "WaterEquivalentOfSnowCover(SWE)"))
+      ),
     options = layersControlOptions(collapsed = FALSE)
   ) %>% 
   addLegend(colors = cols,
             labels = leg_labels,
             opacity = 0.8,
-            # title = "HISTALP",
             position = "bottomright"
-  )
+  ) %>% 
+  hideGroup(str_c("JB-SMSC inventory" , ": ", c("Snow depth", "Depth of snowfall", "SWE",  "Bulk snow density", "Snow albedo"))) %>% 
+  hideGroup("NH-SWE") %>% 
+  hideGroup(str_c("European Snow Booklet", ": ", c("Snow Depth (HS)", "Depth of Snowfall (HN)", "WaterEquivalentOfSnowCover(SWE)"))) 
 
 ```
 
