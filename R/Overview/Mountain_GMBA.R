@@ -1,34 +1,3 @@
-# Install Packages
-if (!require(writexl)) {
-  install.packages("writexl")
-}
-
-if (!require(sf)) {
-  install.packages("sf")
-}
-
-if (!require(openxlsx)) {
-  install.packages("openxlsx")
-}
-
-if (!require(ggplot2)) {
-  install.packages("ggplot2")
-}
-
-if (!require(dplyr)) {
-  install.packages("dplyr")
-}
-
-if (!require(rnaturalearth)) {
-  install.packages("rnaturalearth")
-}
-
-if (!require(countrycode)) {
-  install.packages("countrycode")
-}
-
-
-
 # Load Packages
 library("sf")
 library("writexl")

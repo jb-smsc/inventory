@@ -23,3 +23,4 @@ dat1 %>%
   ylab("Stations")+
   theme(axis.text.y = element_blank(), # remove y-axis overplotting
         axis.ticks.y = element_blank())
+

@@ -128,4 +128,3 @@ for (i in 1:length(dataframes)) {
     create_plot(levels[i], dataframes[[i]], property)
   }
 }
-
