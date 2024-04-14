@@ -8,7 +8,7 @@ library(readr)
 library(stringr)
 # library(purrr)
 
-fn_in <- "data-raw/copy_2023-12-18_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
+fn_in <- "data-raw/copy_2024-04-14_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
 
 all_sheets <- excel_sheets(fn_in)
 all_sheets <- all_sheets[all_sheets != "Snow information_template"] # template
@@ -212,6 +212,35 @@ tbl_19_japanese_mountains <- tibble(
 )
 
 
+# 20 Russia ---------------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[20], 
+                    range = "F1:P2", col_names = str_c("col", 1:11), col_types = "text")
+tbl_20_russia <- tibble(
+  region = "Japan",
+  creator_expert = "Colleen Mortimer",
+)
+
+
+# 21 US_Northeast ---------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, all_sheets[21], 
+                    range = "F1:P2", col_names = str_c("col", 1:11), col_types = "text")
+tbl_21_us_ne <- tibble(
+  region = "ortheast United States",
+  creator_expert = "Colleen Mortimer",
+)
+
+# 22 US_NRCS --------------------------------------------------------------
+
+
+tbl_in <- read_xlsx(fn_in, all_sheets[22], 
+                    range = "F1:P2", col_names = str_c("col", 1:11), col_types = "text")
+tbl_22_us_nrcs <- tibble(
+  region = "Western US and Alaska",
+  creator_expert = "Colleen Mortimer",
+)
+
 # combine -----------------------------------------------------------------
 
 l_all <- list(
@@ -233,7 +262,10 @@ l_all <- list(
   tbl_16_mt_lebanon,
   tbl_17_spain,
   tbl_18_greenland,
-  tbl_19_japanese_mountains
+  tbl_19_japanese_mountains,
+  tbl_20_russia,
+  tbl_21_us_ne,
+  tbl_22_us_nrcs
 )
 
 names(l_all) <- all_sheets
