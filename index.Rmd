@@ -6,6 +6,8 @@ output:
     theme: 
       version: 5
       bootswatch: morph
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -17,13 +19,7 @@ library(leaflet)
 library(htmltools)
 ```
 
-# Map
-
-## Column 
-
-### Map
-
-```{r}
+```{r data jb-smsc}
 dat <- readRDS(here::here("data/inventory-01-read.rds"))
 dat_sub <- dat %>% 
   rename(station_name = "Station name",
@@ -32,13 +28,60 @@ dat_sub <- dat %>%
                 \(x) if_else(x == "YES", cur_column(), NA))) %>% 
   tidyr::unite("ll_vars", `Snow depth`:`Snow albedo`, 
                sep = ", ", na.rm = T, remove = F) %>% 
-  select(station_name:altitude, type = Type, freq = Frequency, ll_vars) %>% 
+  select(station_name:altitude, type = Type, freq = Frequency, ll_vars, Begin, End) %>%
   mutate(ll1 = str_c(station_name, ", ", altitude, "m"),
          ll2 = str_c(station_name, ", ", altitude, "m","<br/>",
+                     Begin, "-", End, "</br>",
                      type, "<br/>", 
                      freq, "<br/>",
                      ll_vars))
 sf_sub <- st_as_sf(dat_sub, coords = c("Longitude", "Latitude"), crs = 4326)
+```
+
+```{r data nh-swe}
+sf_nhswe <- read_sf("data-raw/NH_SWE_METADATA.csv") %>% 
+  st_as_sf(coords = c("LON", "LAT"), crs = 4326)
+
+sf_nhswe_sub <- sf_nhswe %>% 
+  select(STANAME:VALIDYEARS) %>% 
+  mutate(ll2 = str_c(STANAME, ", ", ELEV, "m","<br/>",
+                     START, "-", END, "<br/>", 
+                     VALIDYEARS, " valid years"))
+```
+
+```{r data esb}
+tbl_esb <- readRDS(here::here("data/esb-01-read.rds"))
+sf_esb <- tbl_esb %>% 
+  filter(!is.na(`LONGITUDE (WGS 1984)`)) %>% 
+  st_as_sf(coords = c("LONGITUDE (WGS 1984)", "LATITUDE (WGS 1984)"), crs = 4326)
+
+sf_esb_sub <- sf_esb %>% 
+  rename(station_name = "STATION NAME",
+         altitude = "ELEVATION A.S.L. (m)",
+         start_year = "START DATE of MEASUREMENT LOCATION",
+         interval_h = `INTERVAL (h)`) %>% 
+  mutate(man_auto = if_else(AUTOMATIC == 1 & MANUAL == 0, "automatic", 
+                            if_else(AUTOMATIC == 0 & MANUAL == 1, "manual", 
+                                    "manual & automatic"))) %>% 
+  mutate(altitude = if_else(!is.na(altitude), as.character(round(altitude)), "---"),
+         interval_h = if_else(!is.na(interval_h), as.character(interval_h), "???"),
+         start_year = if_else(!is.na(start_year), as.character(start_year), "???")) %>% 
+  select(station_name:start_year, man_auto, variable, interval_h) %>% 
+  mutate(ll2 = str_c(station_name, ", ", altitude, "m","<br/>",
+                     start_year, "-", "<br/>", 
+                     man_auto, "<br/>", 
+                     "every ", interval_h, " hour(s)", "<br/>",
+                     variable))
+```
+
+# Map
+
+## Column 
+
+### Map
+
+```{r}
+
 
 leaflet(sf_sub) %>% 
   # addTiles() %>% 
@@ -55,6 +98,7 @@ leaflet(sf_sub) %>%
     options = layersControlOptions(collapsed = FALSE)
   ) 
 ```
+
 
 # Table
 
@@ -78,5 +122,55 @@ dat_table %>%
          `Snow depth`:`Snow albedo`) %>% 
   # knitr::kable()
   DT::datatable(options = list(iDisplayLength = 25))
+```
+
+
+# Comparison maps
+
+## Column 
+
+### Map (JB-SMSC, NH-SWE, ESB)
+
+```{r}
+
+cols <- scales::brewer_pal(palette = "Dark2")(3)
+leg_labels <- c("JB-SMSC inventory", "NH-SWE", "European Snow Booklet")
+
+leaflet() %>% 
+  # addTiles() %>% 
+  addProviderTiles("CartoDB.Positron", group = "CartoDB") %>% 
+  addProviderTiles("Esri.WorldTopoMap", group = "Topomap") %>% 
+  addProviderTiles("Esri.WorldImagery", group = "WorldImagery") %>% 
+  addCircles(
+    data = sf_sub,
+    group = leg_labels[1],
+    color = cols[1],
+    label = lapply(sf_sub$ll2, HTML)
+  ) %>% 
+  addCircles(
+    data = sf_nhswe_sub,
+    group = leg_labels[2],
+    color = cols[2],
+    label = lapply(sf_nhswe_sub$ll2, HTML)
+  ) %>% 
+  addCircles(
+    data = sf_esb_sub,
+    group = leg_labels[3],
+    color = cols[3],
+    label = lapply(sf_esb_sub$ll2, HTML)
+  ) %>% 
+  addLayersControl(
+    baseGroups = c("Topomap", "CartoDB", "WorldImagery"),
+    position = "topright",
+    overlayGroups = leg_labels,
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>% 
+  addLegend(colors = cols,
+            labels = leg_labels,
+            opacity = 0.8,
+            # title = "HISTALP",
+            position = "bottomright"
+  )
+
 ```
 
