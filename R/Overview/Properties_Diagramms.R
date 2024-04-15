@@ -19,6 +19,8 @@ inventory <- st_as_sf(`inventory-01-read`, coords = c("Longitude", "Latitude"), 
 # Cut points
 inventory_GMBA <- st_join(inventory, GMBA_clean)
 
+
+
 #Theme function for Diagrams
 my_theme <- function() {
   theme_bw() +
@@ -102,7 +104,7 @@ create_plot <- function(level, df, property) {
     selected_region$End[is.na(selected_region$End)] <- 2024
     # Create a plot with 'Begin' and 'End' on the x-axis and the stations on the y-axis
     plot <- selected_region %>%
-      mutate(yy_name_sorted = fct_reorder(ID, Begin)) %>%
+      mutate(yy_name_sorted = fct_reorder(rownames(selected_region), Begin)) %>%
       ggplot() +
       geom_segment(aes(x = Begin, xend = End, y = yy_name_sorted, yend = yy_name_sorted)) +
       theme_bw() +
