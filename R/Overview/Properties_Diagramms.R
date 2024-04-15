@@ -11,13 +11,13 @@ save_l <- "Overview_Finished/"
 # Read in the dataset
 `inventory-01-read` <- readRDS("data/inventory-01-read.rds")
 # Read GMBA shp-File
-GMBA <- sf::read_sf("data-raw/GMBA/GMBA_Inventory_v2.0_standard_300.shx")
+GMBA <- read_sf("data-raw/GMBA/GMBA_Inventory_v2.0_standard_300.shx")
 # Clean geometry
-GMBA_clean <- sf::st_make_valid(GMBA)
+GMBA_clean <- st_make_valid(GMBA)
 # Create points with coordinates for inventory-01-read
-inventory <- sf::st_as_sf(`inventory-01-read`, coords = c("Longitude", "Latitude"), crs = 4326)
+inventory <- st_as_sf(`inventory-01-read`, coords = c("Longitude", "Latitude"), crs = 4326)
 # Cut points
-inventory_GMBA <- sf::st_join(inventory, GMBA_clean)
+inventory_GMBA <- st_join(inventory, GMBA_clean)
 
 #Theme function for Diagrams
 my_theme <- function() {
@@ -102,25 +102,25 @@ create_plot <- function(level, df, property) {
     selected_region$End[is.na(selected_region$End)] <- 2024
     # Create a plot with 'Begin' and 'End' on the x-axis and the stations on the y-axis
     plot <- selected_region %>%
-      dplyr::mutate(yy_name_sorted = forcats::fct_reorder(ID, Begin)) %>%
-      ggplot2::ggplot() +
-      ggplot2::geom_segment(aes(x = Begin, xend = End, y = yy_name_sorted, yend = yy_name_sorted)) +
-      ggplot2::theme_bw() +
+      mutate(yy_name_sorted = fct_reorder(ID, Begin)) %>%
+      ggplot() +
+      geom_segment(aes(x = Begin, xend = End, y = yy_name_sorted, yend = yy_name_sorted)) +
+      theme_bw() +
       theme(panel.grid = element_blank())+
-      ggplot2::xlab(NULL) +
-      ggplot2::ylab("Stations") +
-      ggplot2::theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
-      ggplot2::labs(title = paste("Region:", region, "| Level:", level, "| Property:", property))  # Add a title to the plot
+      xlab(NULL) +
+      ylab("Stations") +
+      theme(axis.text.y = element_blank(), axis.ticks.y = element_blank()) +
+      labs(title = paste("Region:", region, "| Level:", level, "| Property:", property))  # Add a title to the plot
     # Save the plot in the directory 'save_l' with specified width and height
-    ggplot2::ggsave(filename = paste0(save_l, "/", level, "/", property, "/", region, ".png"), plot = plot, width = 8, height = 6)
+    ggsave(filename = paste0(save_l, "/", level, "/", property, "/", region, ".png"), plot = plot, width = 8, height = 6)
   }
 }
 
 
 # List of dataframes
-dataframes <- list(df_m01, df_m02)
+dataframes <- list(df_m01)
 # List of levels
-levels <- c("Level_01", "Level_02")
+levels <- c("Level_01")
 
 # Create the plots for each property in each dataframe
 for (i in 1:length(dataframes)) {
