@@ -2,14 +2,6 @@
 save_l <- "Overview_Finished/"
 
 # Load packages
-if (!require(writexl)) {
-  install.packages("writexl")
-}
-
-if (!require(ggplot2)) {
-  install.packages("ggplot2")
-}
-
 library(writexl)
 library(ggplot2)
 
@@ -90,4 +82,3 @@ freq <- sort(freq, decreasing  = TRUE)
 df <- data.frame(Frequency = names(freq), Counts = as.integer(freq))
 # Print the dataframe as an Excel file
 write_xlsx(df, paste0(save_l, "Frequency.xlsx"))
-

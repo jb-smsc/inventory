@@ -120,9 +120,9 @@ create_plot <- function(level, df, property) {
 
 
 # List of dataframes
-dataframes <- list(df_m01)
+dataframes <- list(df_m01, df_m02, df_m03)
 # List of levels
-levels <- c("Level_01")
+levels <- c("Level_01", "Level_02", "Level_03")
 
 # Create the plots for each property in each dataframe
 for (i in 1:length(dataframes)) {

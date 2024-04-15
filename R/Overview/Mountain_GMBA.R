@@ -189,7 +189,7 @@ height_plot <- ggplot(df_filtered, aes(x=`Altitude (m)`))+
   geom_freqpoly(size = 1 )+
   scale_x_continuous(breaks = seq(0,5000, by = 500))+
   ylab("Counts")+ xlab("Height in m")+ 
-  ggtitle("Height of NA stations")+
+  ggtitle("Height of NA stations in Level_01")+
   my_theme()
 # Automatically save diagram
 ggsave(paste0(save_l, "height_of_NA_stations_Level01.png"), plot = height_plot, width = 8, height = 6)
