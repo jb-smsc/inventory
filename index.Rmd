@@ -106,8 +106,7 @@ leaflet(sf_sub) %>%
   ) %>% 
   addLayersControl(
     baseGroups = c("Topomap", "CartoDB", "WorldImagery"),
-    position = "topright",
-    options = layersControlOptions(collapsed = FALSE)
+    position = "topright"
   ) 
 ```
 
@@ -236,8 +235,7 @@ leaflet() %>%
       str_c(leg_labels[1], ": ", c("Snow depth", "Depth of snowfall", "SWE",  "Bulk snow density", "Snow albedo")),
       leg_labels[2],
       str_c(leg_labels[3], ": ", c("Snow Depth (HS)", "Depth of Snowfall (HN)", "WaterEquivalentOfSnowCover(SWE)"))
-      ),
-    options = layersControlOptions(collapsed = FALSE)
+      )
   ) %>% 
   addLegend(colors = cols,
             labels = leg_labels,
