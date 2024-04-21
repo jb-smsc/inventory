@@ -1,9 +1,9 @@
-# Save location
-save_l <- "Overview_Finished/"
-
 # Load packages
 library(writexl)
 library(ggplot2)
+
+# Save location
+save_l <- "Overview_Finished/"
 
 
 # Read in the dataset
