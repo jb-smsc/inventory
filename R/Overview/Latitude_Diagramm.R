@@ -19,8 +19,6 @@ inventory <- sf::st_as_sf(`inventory-01-read`, coords = c("Longitude", "Latitude
 inventory_GMBA <- sf::st_join(inventory, GMBA_clean)
 
 
-#########################################################################################
-
 # Extract latitudes
 inventory_GMBA$latitude <- sf::st_coordinates(inventory_GMBA$geometry)[,2]
 
