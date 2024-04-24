@@ -115,26 +115,6 @@ average_height_difference <- joined_data %>%
 # Füge die durchschnittliche Höhe der Polygone hinzu
 average_heights <- st_join(average_station_height, average_height_difference, by = "Level_01.x")
 
-# Erstelle das Diagramm
-ggplot(joined_data, aes(x = Level_01.x)) +
-  geom_bar(aes(y = `Altitude (m)`), stat = "identity", fill = "blue", alpha = 0.5) +
-  geom_bar(aes(y = average_height.x), stat = "identity", fill = "red", alpha = 0.5) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(x = "Level 01", y = "Average Height (m)", title = "Average Heights by Level 01") +
-  scale_fill_manual(values = c("blue", "red"), guide = guide_legend(title = "Type", labels = c("Station", "Polygon"))) +
-  theme(legend.position = "bottom")
-
-
-
-
-# Erstelle das Diagramm
-ggplot(joined_data, aes(x = Level_01.x)) +
-  geom_bar(aes(y = `Altitude (m)`), stat = "identity", fill = "blue", alpha = 0.5, position = "dodge") +
-  geom_bar(aes(y = average_height.x), stat = "identity", fill = "red", alpha = 0.5, position = "dodge") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(x = "Level 01", y = "Average Height (m)", title = "Average Heights by Level 01") +
-  scale_fill_manual(values = c("blue", "red"), guide = guide_legend(title = "Type", labels = c("Station", "Polygon"))) +
-  theme(legend.position = "bottom")
 
 
 
@@ -152,11 +132,14 @@ average_heights <- clean_heights %>%
   summarise(Average_Station_Height = mean(`Altitude (m)`, na.rm = TRUE),
             Average_Region_Height = mean(unique(average_height.y), na.rm = TRUE))
 
-# Erstelle das Diagramm
-ggplot(average_heights, aes(x = Level_01.x)) +
-  geom_bar(aes(y = Average_Station_Height), stat = "identity", fill = "blue", alpha = 0.5, position = "dodge") +
-  geom_bar(aes(y = Average_Region_Height), stat = "identity", fill = "red", alpha = 0.5, position = "dodge") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(x = "Level 01", y = "Average Height (m)", title = "Average Heights by Level 01") +
-  scale_fill_manual(values = c("blue", "red"), guide = guide_legend(title = "Type", labels = c("Station", "Region"))) +
-  theme(legend.position = "bottom")
+# Erstelle das Diagramm mit einer Legende
+p <- ggplot(average_heights, aes(x = Level_01.x)) +
+       geom_bar(aes(y = Average_Station_Height, fill = "Station"), stat = "identity", alpha = 0.5, position = "dodge") +
+       geom_bar(aes(y = Average_Region_Height, fill = "Region"), stat = "identity", alpha = 0.5, position = "dodge") +
+       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+       labs(x = "", y = "Average Height (m)", title = "Average Heights by Level 01") +
+        scale_fill_manual("", values = c("Station" = "blue", "Region" = "red"))
+
+
+ggsave(paste0(save_l, "Average_Heights.png"),
+       plot = p, width = 20, height = 10)
