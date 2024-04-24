@@ -10,16 +10,16 @@ save_l <- "Overview_Finished/"
 # Read in the dataset
 `inventory-01-read` <- readRDS("data/inventory-01-read.rds")
 # Read GMBA shp-File
-GMBA <- sf::read_sf("data-raw/GMBA/GMBA_Inventory_v2.0_standard_300.shx")
+GMBA <- read_sf("data-raw/GMBA/GMBA_Inventory_v2.0_standard_300.shx")
 # Clean geometry
-GMBA_clean <- sf::st_make_valid(GMBA)
+GMBA_clean <- st_make_valid(GMBA)
 # Create points with coordinates for inventory-01-read
-inventory <- sf::st_as_sf(`inventory-01-read`, coords = c("Longitude", "Latitude"), crs = 4326)
+inventory <- st_as_sf(`inventory-01-read`, coords = c("Longitude", "Latitude"), crs = 4326)
 # Cut points
-inventory_GMBA <- sf::st_join(inventory, GMBA_clean)
+inventory_GMBA <- st_join(inventory, GMBA_clean)
 
 # Extract latitudes
-inventory_GMBA$latitude <- sf::st_coordinates(inventory_GMBA$geometry)[,2]
+inventory_GMBA$latitude <- st_coordinates(inventory_GMBA$geometry)[,2]
 
 
 
