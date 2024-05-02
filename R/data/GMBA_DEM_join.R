@@ -78,6 +78,13 @@ for(i in 1:nrow(GMBA_clean_P)){
 # Add the average heights to the GMBA_clean_P dataframe
 GMBA_clean_P$average_height <- average_heights
 
+# Select only the desired columns to make file size smaller
+GMBA_clean_P <- GMBA_clean_P[, c("GMBA_V2_ID", "geometry", "average_height")]
+
+#GMBA file has now average height for each polygon
+
+# Rename the DataFrame to GMBA_avgheight
+GMBA_avgheight <- GMBA_clean_P
 
 # Save File
-saveRDS(GMBA_clean_P, file = "/data/GMBA_clean_P.rds")
+saveRDS(GMBA_avgheight, file = "data/GMBA_avgheight.rds")

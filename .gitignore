@@ -5,3 +5,5 @@
 fig/
 data-raw/ghcnd-inventory.txt
 temp-backup/
+data-raw/ETOPO_2022_v1_60s_N90W180_bed.tif
+Overview_Finished/
