@@ -12,7 +12,6 @@ library(sp)
 # Save location
 save_l <- "Overview_Finished/"
 
-#Preparation
 # Read in the dataset
 `inventory-01-read` <- readRDS("data/inventory-01-read.rds")
 # Read GMBA shp-File
@@ -106,7 +105,6 @@ stations_by_altitude_and_region_Level_04 <- inventory_GMBA %>%
   group_by(Level_04, altitude_bin) %>%
   summarise(n_stations = n(), area = sum(!is.na(altitude)) * (1.85)^2) %>%
   mutate(stations_per_km2 = n_stations / area)
-
 
 
 
