@@ -3,8 +3,10 @@ library(ggplot2)
 library(dplyr)
 library(tidyverse)
 library(raster)
+library(stars)
+library(terra)
 
-# Preparation ####
+ # Preparation ####
 
 # Save location
 save_l <- "Overview_Finished/"
@@ -18,6 +20,9 @@ GMBA_clean <- st_make_valid(GMBA)
 inventory <- st_as_sf(`inventory-01-read`, coords = c("Longitude", "Latitude"), crs = 4326)
 # Cut points
 inventory_GMBA <- st_join(inventory, GMBA_clean)
+
+
+
 # Read in the GMBA_avgheight    All Polygons form GMBA Dataset with average height of them calculated via worldwide DEM
 GMBA_avgheight <- readRDS("data/GMBA_avgheight.rds")
 # Only Stations which are in GMBA
@@ -47,23 +52,6 @@ labels <- paste0("(", breaks[-length(breaks)], "-", breaks[-1], "] m")
 # Create a new column "Altitude_bin" that represents the altitude bins
 #joined_data$Altitude_bin <- cut(joined_data$`Altitude (m)`, breaks = breaks, labels = labels)
 GMBA_avgheight$Altitude_bin <- cut(GMBA_avgheight$average_height, breaks = breaks, labels = labels)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
