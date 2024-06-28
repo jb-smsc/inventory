@@ -20,45 +20,10 @@ labels <- paste0("(", breaks[-length(breaks)], "-", breaks[-1], "] m")
 
 
 # nach Level_01 zusammenführen
+ 
 
-# Durchlaufen Sie jede einzigartige "Level_01" Kategorie
-for(level in unique(GMBA$Level_01)) {
-  
-  # Filtern Sie die GMBA Daten für die aktuelle "Level_01" Kategorie
-  filtered_gmba <- GMBA[GMBA$Level_01 == level,]
-  
-  # Finden Sie die entsprechenden Datenrahmen in Ihrer Liste
-  matching_dfs <- narea[names(narea) %in% filtered_gmba$GMBA_V2_ID]
-} 
-   
-
-# NA durch 0 ersetzen
-for(i in 1:length(matching_dfs)) {
-  # Konvertieren Sie die Spalte 'n' in einen numerischen Vektor
-  matching_dfs[[i]]$n <- as.numeric(as.character(matching_dfs[[i]]$n))
-  
-  # Ersetzen Sie 'NA'-Werte durch 0
-  matching_dfs[[i]][is.na(matching_dfs[[i]])] <- 0
-}
-
-
-# Werte addieren
-# Durchlaufen Sie jedes Element in 'matching_dfs'
-for(i in 1:length(matching_dfs)) {
-  # Aggregieren Sie die 'area' und 'n' Werte für jede 'a_bin'
-  aggregated_df <- aggregate(cbind(area, n) ~ a_bin, matching_dfs[[i]], sum)
-}
-# Jetzt enthält 'aggregated_df' die summierten 'area' und 'n' Werte für jede 'a_bin' 
-
-
-
-
-
-
-
-
-# Erstellen Sie eine leere Liste, um die aggregierten DataFrames zu speichern
-aggregated_dfs <- list()
+# Erstellen Sie eine leere Liste, um die DataFrames zu speichern
+Level_01 <- list()
 
 # Durchlaufen Sie jede einzigartige "Level_01" Kategorie
 for(level in unique(GMBA$Level_01)) {
@@ -69,24 +34,10 @@ for(level in unique(GMBA$Level_01)) {
   # Finden Sie die entsprechenden DataFrames in Ihrer Liste
   matching_dfs <- narea[names(narea) %in% filtered_gmba$GMBA_V2_ID]
   
-  # NA durch 0 ersetzen und Werte addieren
-  for(i in 1:length(matching_dfs)) {
-    # Konvertieren Sie die Spalte 'n' in einen numerischen Vektor
-    matching_dfs[[i]]$n <- as.numeric(as.character(matching_dfs[[i]]$n))
-    
-    # Ersetzen Sie 'NA'-Werte durch 0
-    matching_dfs[[i]][is.na(matching_dfs[[i]])] <- 0
-    
-    # Aggregieren Sie die 'area' und 'n' Werte für jede 'a_bin'
-    aggregated_df <- aggregate(cbind(area, n) ~ a_bin, matching_dfs[[i]], sum)
-    
-    # Fügen Sie das aggregierte DataFrame zur Liste hinzu
-    aggregated_dfs[[paste(level, i, sep = "_")]] <- aggregated_df
-  }
+  # Fügen Sie den DataFrame zur Liste hinzu
+  Level_01[[level]] <- matching_dfs
 }
 
-# Jetzt enthält 'aggregated_dfs' die summierten 'area' und 'n' Werte für jede 'a_bin' in jedem DataFrame, 
-# und jeder DataFrame ist mit dem entsprechenden 'Level_01' Wert gekennzeichnet.
 
 
 
@@ -102,6 +53,9 @@ for(level in unique(GMBA$Level_01)) {
 
 
 
+
+
+# Old ##############################
 
 # Preparation ####
 
