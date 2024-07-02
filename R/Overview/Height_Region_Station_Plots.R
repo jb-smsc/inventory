@@ -1,3 +1,5 @@
+# Plots: average height for the area and avg height of the stations in the region
+
 library(sf)
 library(ggplot2)
 library(dplyr)

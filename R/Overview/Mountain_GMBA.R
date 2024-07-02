@@ -1,3 +1,6 @@
+# Plot: Height of all stations not in GMBA
+# Table: How many properties measured in region (level) and Country and continent; Number of stations
+
 # Load Packages
 library("sf")
 library("writexl")

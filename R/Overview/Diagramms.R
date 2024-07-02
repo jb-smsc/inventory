@@ -1,3 +1,5 @@
+# All Stations: Frequency table; Duration of measurement; Begin of measurement; Height of stations
+
 # Load packages
 library(writexl)
 library(ggplot2)
@@ -82,3 +84,4 @@ freq <- sort(freq, decreasing  = TRUE)
 df <- data.frame(Frequency = names(freq), Counts = as.integer(freq))
 # Print the dataframe as an Excel file
 write_xlsx(df, paste0(save_l, "Frequency.xlsx"))
+

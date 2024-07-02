@@ -1,3 +1,5 @@
+# Plot: 5° Latitude bins, number of stations and mean height of them (GMBA and No_GMBA)
+
 # Load Packages
 library(sf)
 library(ggplot2)

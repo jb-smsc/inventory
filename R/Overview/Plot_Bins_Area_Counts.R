@@ -1,4 +1,4 @@
-# Creating plots with number of stations and area for given altitude bins
+# NOT FINISHED Creating plots with number of stations and area for given altitude bins
 
 library(sf)
 library(ggplot2)
