@@ -8,7 +8,7 @@ library(readr)
 library(stringr)
 # library(purrr)
 
-fn_in <- "data-raw/copy_2024-04-14_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
+fn_in <- "data-raw/copy_2024-08-22_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
 
 all_sheets <- excel_sheets(fn_in)
 all_sheets <- all_sheets[all_sheets != "Snow information_template"] # template
@@ -20,6 +20,8 @@ read_xlsx(fn_in, all_sheets[1]) %>%
   unname() -> mat_names
 names_cols <- c(mat_names[2, 1:9], mat_names[3, 10:15], mat_names[2, 16])
 
+
+all_sheets_manual <- character(length(all_sheets))
 
 # manual read in ----------------------------------------------------------
 
@@ -43,6 +45,7 @@ tbl_in %>%
   mutate(SWE = if_else(str_starts(ID, "SSS") & !is.na(ID), "YES", SWE),
          `Depth of snowfall` = if_else(str_starts(ID, "SSS") & !is.na(ID), "YES", `Depth of snowfall`)) -> tbl_01_hkh
 
+all_sheets_manual[1] <- "Snow information_HKH"
 
 # 2 rofental -------------------------------------------------------------------
 
@@ -53,6 +56,7 @@ tbl_in[1:3, ]  %>%
          Begin = year(Begin),
          End = NA) -> tbl_02_rofental
 
+all_sheets_manual[2] <- "Snow information Rofental"
 
 # 3 Geosphere Austria -------------------------------------------------------------
 
@@ -76,6 +80,8 @@ tbl_in %>%
   mutate(Begin = year(ymd(Begin)),
          End = year(ymd(End))) -> tbl_03_geosphere
 
+all_sheets_manual[3] <- "GeoSphere Austria"
+
 # 4 swiss alps ------------------------------------------------------------
 
 tbl_in <- read_xlsx(fn_in, "Swiss Alps", skip = 4, col_names = names_cols[1:14])
@@ -87,13 +93,15 @@ tbl_in %>%
                              str_c(str_sub(Longitude, 1, 1), ".", str_sub(Longitude, 2)))) %>% 
   mutate(Longitude = parse_number(Longitude)) -> tbl_04_swiss
   
+all_sheets_manual[4] <- "Swiss Alps"
+
 
 # 5 european alps tc2021 --------------------------------------------------
 
 tbl_in <- read_xlsx(fn_in, "European Alps (TC2021)", skip = 4, col_names = names_cols[1:11])
 tbl_05_alps_tc2021 <- tbl_in
 
-
+all_sheets_manual[5] <- "European Alps (TC2021)"
 
 
 # 6 french alps -----------------------------------------------------------
@@ -108,19 +116,21 @@ tbl_in %>%
                             parse_number(str_c(str_sub(Latitude, 1, 2), ".", str_sub(Latitude, 3))),
                             Latitude)) -> tbl_06_french_alps
 
-
+all_sheets_manual[6] <- "French Alps (in addition to TC)"
 
 # 7 Canada ----------------------------------------------------------------
 
 tbl_in <- read_xlsx(fn_in, "Canada", skip = 4, col_names = names_cols)
 tbl_07_canada <- tbl_in
 
-
+all_sheets_manual[7] <- "Canada"
 
 # 8 chilean andes ---------------------------------------------------------
 
 tbl_in <- read_xlsx(fn_in, "Chilean Andes", skip = 4, col_names = names_cols)
 tbl_08_chilean_andes <- tbl_in
+
+all_sheets_manual[8] <- "Chilean Andes"
 
 # 9 australian alps -------------------------------------------------------
 
@@ -130,6 +140,7 @@ tbl_in %>%
   mutate(Longitude = parse_number(Longitude),
          Latitude = - parse_number(Latitude)) -> tbl_09_australian_alps
 
+all_sheets_manual[9] <- "Australian Alps (NSW)"
 
 # 10 pyrenees -------------------------------------------------------------
 
@@ -145,7 +156,7 @@ tbl_in %>%
          End = year(End)) -> tbl_10_pyrenees
 
 
-
+all_sheets_manual[10] <- "Pyrenees"
 
 
 # 11 corsica --------------------------------------------------------------
@@ -158,6 +169,7 @@ tbl_in %>%
   mutate(Begin = year(Begin),
          End = year(End)) -> tbl_11_corsica
 
+all_sheets_manual[11] <- "Corsica"
 
 # 12 Dinaric Alps ---------------------------------------------------------
 
@@ -167,6 +179,7 @@ tbl_in %>%
          Latitude = parse_number(Latitude),
          Begin = year(ymd(Begin))) -> tbl_12_dinaric_alps
 
+all_sheets_manual[12] <- "Dinaric Alps"
 
 # 13 southern andes argentina ---------------------------------------------
 
@@ -179,7 +192,7 @@ tbl_in %>%
   mutate(Begin = year(ymd(Begin, truncated = 2)),
          End = year(ymd(End, truncated = 2))) -> tbl_13_southern_andes_argentina
   
-
+all_sheets_manual[13] <- "Southern Andes Argentina"
 
 
 # 14 western carpathians (slovakia) ---------------------------------------
@@ -187,14 +200,14 @@ tbl_in %>%
 tbl_in <- read_xlsx(fn_in, "Western Carpathians (Slovakia)", skip = 4, col_names = names_cols)
 tbl_14_slovakia <- tbl_in
 
-
+all_sheets_manual[14] <- "Western Carpathians (Slovakia)"
 
 # 15 atlas ----------------------------------------------------------------
 
 tbl_in <- read_xlsx(fn_in, "Atlas", skip = 4, col_names = names_cols[2:16])
 tbl_15_atlas <- tbl_in
 
-
+all_sheets_manual[15] <- "Atlas"
 
 
 # 16 Mt Lebanon -----------------------------------------------------------
@@ -204,6 +217,8 @@ tbl_in %>%
   mutate(Latitude = parse_number(Latitude)) %>% 
   mutate(Longitude = parse_number(Longitude))  -> tbl_16_mt_lebanon
 
+
+all_sheets_manual[16] <- "Mt Lebanon"
 
 # 17 spain ----------------------------------------------------------------
 
@@ -234,6 +249,7 @@ tbl_in %>%
          Latitude = dms2dec_spain(Latitude),
          Longitude = dms_lon_spain(Longitude)) -> tbl_17_spain
   
+all_sheets_manual[17] <- "Spain"
 
 
 # 18 Greenland -----------------------------------------------------------
@@ -245,7 +261,7 @@ tbl_in %>%
          Longitude = as.numeric(Longitude), 
          Latitude = as.numeric(Latitude)) -> tbl_18_greenland
 
-
+all_sheets_manual[18] <- "Greenland"
 
 # 19 Japanese mountains -----------------------------------------------------------
 
@@ -255,36 +271,37 @@ tbl_in %>%
          Longitude = as.numeric(Longitude), 
          Latitude = as.numeric(Latitude)) -> tbl_19_japanese_mountains
 
+all_sheets_manual[19] <- "Japanese mountains"
 
 # 20 Russia ---------------------------------------------------------------
 
-# take all (not mountain subset) from separate file
-fn_mortimer <- "data-raw/2024-04-14_Mortimer_data_inventory.xlsx" 
-excel_sheets(fn_mortimer)
-
-tbl_in <- read_xlsx(fn_mortimer, "Russia_all", skip = 4, col_names = names_cols[1:13])
+tbl_in <- read_xlsx(fn_in, "Russia", skip = 4, col_names = names_cols[1:13])
 tbl_in %>% 
   mutate(ID = as.character(ID))-> tbl_20_russia
+
+all_sheets_manual[20] <- "Russia"
 
 
 # 21 US_Northeast ---------------------------------------------------------
 
-# take all (not mountain subset) from separate file
-fn_mortimer <- "data-raw/2024-04-14_Mortimer_data_inventory.xlsx" 
-excel_sheets(fn_mortimer)
-
-tbl_in <- read_xlsx(fn_mortimer, "USNE_all" , skip = 4, col_names = names_cols)
+tbl_in <- read_xlsx(fn_in, "US_Northeast", skip = 4, col_names = names_cols)
 tbl_in -> tbl_21_us_ne
+
+all_sheets_manual[21] <- "US_Northeast"
 
 # 22 US_NRCS --------------------------------------------------------------
 
-# take all (not mountain subset) from separate file
-fn_mortimer <- "data-raw/2024-04-14_Mortimer_data_inventory.xlsx" 
-excel_sheets(fn_mortimer)
-
-tbl_in <- read_xlsx(fn_mortimer, "USNRCS_all" , skip = 4, col_names = names_cols)
+tbl_in <- read_xlsx(fn_in, "US_NRCS", skip = 4, col_names = names_cols)
 tbl_in -> tbl_22_us_nrcs
 
+all_sheets_manual[22] <- "US_NRCS"
+
+# 23 US_SNOTEL --------------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, "US_SNOTEL", skip = 4, col_names = names_cols)
+tbl_in -> tbl_23_us_snotel
+
+all_sheets_manual[23] <- "US_SNOTEL"
 
 
 # combine -----------------------------------------------------------------
@@ -311,10 +328,11 @@ l_all <- list(
   tbl_19_japanese_mountains,
   tbl_20_russia,
   tbl_21_us_ne,
-  tbl_22_us_nrcs
+  tbl_22_us_nrcs,
+  tbl_23_us_snotel
 )
 
-names(l_all) <- all_sheets
+names(l_all) <- all_sheets_manual
 
 tbl_all <- bind_rows(l_all, .id = "sheet_name")
 
