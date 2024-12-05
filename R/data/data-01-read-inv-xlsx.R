@@ -8,17 +8,17 @@ library(readr)
 library(stringr)
 # library(purrr)
 
-fn_in <- "data-raw/copy_2024-08-22_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
+fn_in <- "data-raw/copy_2024-12-04_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
 
 all_sheets <- excel_sheets(fn_in)
 all_sheets <- all_sheets[all_sheets != "Snow information_template"] # template
 all_sheets <- all_sheets[all_sheets != "Snow information Alps"] # first empty sheet
 all_sheets <- all_sheets[all_sheets != "Tabelle1"] # some non-existing sheet
 
-read_xlsx(fn_in, all_sheets[1]) %>% 
+read_xlsx(fn_in, all_sheets[1], col_names = str_c("V", 1:25)) %>% 
   as.matrix %>% 
   unname() -> mat_names
-names_cols <- c(mat_names[2, 1:9], mat_names[3, 10:15], mat_names[2, 16])
+names_cols <- c(mat_names[3, 1:9], mat_names[4, 10:15], mat_names[3, 16])
 
 
 all_sheets_manual <- character(length(all_sheets))
@@ -111,7 +111,8 @@ tbl_in <- read_xlsx(fn_in, "French Alps (in addition to TC)", skip = 4, col_name
 tbl_in %>% 
   mutate(Longitude = parse_number(Longitude, locale = locale(decimal_mark = ",")),
          Latitude = parse_number(Latitude),
-         `Altitude (m)` = parse_number(`Altitude (m)`)) %>% 
+         `Altitude (m)` = parse_number(`Altitude (m)`),
+         ID = as.character(ID)) %>% 
   mutate(Latitude = if_else(Latitude > 90,
                             parse_number(str_c(str_sub(Latitude, 1, 2), ".", str_sub(Latitude, 3))),
                             Latitude)) -> tbl_06_french_alps
@@ -304,6 +305,83 @@ tbl_in -> tbl_23_us_snotel
 all_sheets_manual[23] <- "US_SNOTEL"
 
 
+# 24 China --------------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, "China", skip = 4, col_names = names_cols[1:10])
+tbl_in %>%
+  mutate(Begin = year(ymd(Begin)),
+         Longitude = as.numeric(Longitude), 
+         Latitude = as.numeric(Latitude),
+         `Altitude (m)` = as.numeric(`Altitude (m)`)) -> tbl_24_china
+
+all_sheets_manual[24] <- "China"
+
+
+# 25 Romania --------------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, "Romania", skip = 4, col_names = names_cols,
+                    na = c("", "present"))
+tbl_in %>%
+  mutate(Begin = year(dmy(Begin)),
+         Longitude = as.numeric(Longitude), 
+         Latitude = as.numeric(Latitude),
+         `Altitude (m)` = as.numeric(`Altitude (m)`)) -> tbl_25_romania
+
+all_sheets_manual[25] <- "Romania"
+
+# 26 Sierra Nevada (US) --------------------------------------------------------------
+f_date_sierra <- function(x){
+  out <- numeric(length(x))
+  out[!is.na(x) & str_detect(x, fixed("/"))] <- year(mdy(x[!is.na(x) & str_detect(x, fixed("/"))]))
+  out[!is.na(x) & !str_detect(x, fixed("/"))] <- as.numeric(x[!is.na(x) & !str_detect(x, fixed("/"))])
+  out
+}
+
+tbl_in <- read_xlsx(fn_in, "Sierra Nevada (US)", skip = 4, col_names = names_cols, 
+                    na = c("", "Present", "--", "2230-2700"))
+tbl_in %>%
+  mutate(Begin = f_date_sierra(Begin),
+         End = f_date_sierra(End),
+         Longitude = as.numeric(Longitude), 
+         Latitude = as.numeric(Latitude),
+         `Altitude (m)` = as.numeric(`Altitude (m)`)) -> tbl_26_sierra_nevada
+
+all_sheets_manual[26] <- "Sierra Nevada (US)"
+
+
+# 27 Central Asia (Uzbekistan) --------------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, "Central Asia (Uzbekistan)", skip = 4, col_names = names_cols[2:10])
+tbl_in %>%
+  mutate(Begin = year(dmy(Begin)),
+         Longitude = as.numeric(str_replace(Longitude, ",", ".")), 
+         Latitude = as.numeric(str_replace(Latitude, ",", ".")),
+         `Altitude (m)` = as.numeric(`Altitude (m)`)) -> tbl_27_casia_uzbekistan
+
+all_sheets_manual[27] <- "Central Asia (Uzbekistan)"
+
+
+# 28 Central Asia (Kazakhstan) --------------------------------------------------------------
+
+dms2dec_kazakh <- function(x){
+  x2 <- str_split_fixed(x, "[⁰|'| ]", 3)
+  s <- x2[, 3] %>% str_replace(",", ".") %>% parse_number()
+  m <- x2[, 2] %>% str_trim() %>% as.numeric
+  d <- x2[, 1] %>% str_trim() %>% as.numeric
+  d + m/60 + s/3600
+}
+
+tbl_in <- read_xlsx(fn_in, "Central Asia (Kazakhstan)", skip = 4, col_names = names_cols[1:10])
+tbl_in %>% 
+  mutate(Begin = as.numeric(Begin),
+         End = as.numeric(End),
+         Longitude = dms2dec_kazakh(Longitude),
+         Latitude = dms2dec_kazakh(Latitude),
+         `Altitude (m)` = as.numeric(`Altitude (m)`)
+         ) -> tbl_28_casia_kazakhstan
+
+all_sheets_manual[28] <- "Central Asia (Kazakhstan)"
+
 # combine -----------------------------------------------------------------
 
 l_all <- list(
@@ -329,7 +407,12 @@ l_all <- list(
   tbl_20_russia,
   tbl_21_us_ne,
   tbl_22_us_nrcs,
-  tbl_23_us_snotel
+  tbl_23_us_snotel,
+  tbl_24_china,
+  tbl_25_romania,
+  tbl_26_sierra_nevada,
+  tbl_27_casia_uzbekistan,
+  tbl_28_casia_kazakhstan
 )
 
 names(l_all) <- all_sheets_manual
@@ -452,6 +535,7 @@ tbl_all2 %>%
 
 # prefill from previous version
 tbl_old <- readRDS("data/inventory-01-read.rds")
+fs::file_copy("data/inventory-01-read.rds", "data/inventory-01-read_backup.rds", overwrite = T)
 
 tbl_all3 <- tbl_all2 %>% 
   rows_patch(
@@ -490,4 +574,4 @@ if(any(is.na(tbl_all3$`Altitude (m)`))){
 # save --------------------------------------------------------------------
 
 
-saveRDS(tbl_all3, "data/inventory-01-read.rds")
+saveRDS(tbl_out, "data/inventory-01-read.rds")

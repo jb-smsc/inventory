@@ -8,7 +8,7 @@ library(readr)
 library(stringr)
 # library(purrr)
 
-fn_in <- "data-raw/copy_2024-08-22_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
+fn_in <- "data-raw/copy_2024-12-04_2023-05-15_JB-SMSC-Spreadsheet-In-situ-meta-information2.xlsx"
 
 all_sheets <- excel_sheets(fn_in)
 all_sheets <- all_sheets[all_sheets != "Snow information_template"] # template
@@ -288,6 +288,72 @@ tbl_23_us_snotel <- tibble(
 
 all_sheets_manual[23] <- "US_SNOTEL"
 
+
+# 24 China --------------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, "China", 
+                    range = "F1:P2", col_names = str_c("col", 1:11), col_types = "text")
+tbl_24_china <- tibble(
+  region = tbl_in[1,] %>% pull(col1),
+  creator_expert = tbl_in[2,] %>% pull(col2),
+)
+
+
+all_sheets_manual[24] <- "China"
+
+
+# 25 Romania --------------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, "Romania", 
+                    range = "F1:P2", col_names = str_c("col", 1:11), col_types = "text")
+tbl_25_romania <- tibble(
+  region = tbl_in[1,] %>% pull(col1),
+  creator_expert = tbl_in[2,] %>% pull(col2),
+)
+
+
+all_sheets_manual[25] <- "Romania"
+
+# 26 Sierra Nevada (US) --------------------------------------------------------------
+
+
+tbl_in <- read_xlsx(fn_in, "Sierra Nevada (US)", 
+                    range = "F1:P2", col_names = str_c("col", 1:11), col_types = "text")
+tbl_26_sierra_nevada <- tibble(
+  region = tbl_in[1,] %>% pull(col1),
+  creator_expert = tbl_in[2,] %>% pull(col2),
+)
+
+
+all_sheets_manual[26] <- "Sierra Nevada (US)"
+
+
+# 27 Central Asia (Uzbekistan) --------------------------------------------------------------
+
+tbl_in <- read_xlsx(fn_in, "Central Asia (Uzbekistan)", 
+                    range = "F1:P2", col_names = str_c("col", 1:11), col_types = "text")
+tbl_27_casia_uzbekistan <- tibble(
+  region = tbl_in[1,] %>% pull(col1),
+  creator_expert = tbl_in[2,] %>% pull(col2),
+)
+
+
+all_sheets_manual[27] <- "Central Asia (Uzbekistan)"
+
+
+# 28 Central Asia (Kazakhstan) --------------------------------------------------------------
+
+
+tbl_in <- read_xlsx(fn_in, "Central Asia (Kazakhstan)", 
+                    range = "F1:P2", col_names = str_c("col", 1:11), col_types = "text")
+tbl_28_casia_kazakhstan <- tibble(
+  region = tbl_in[1,] %>% pull(col1),
+  creator_expert = tbl_in[2,] %>% pull(col2),
+)
+
+all_sheets_manual[28] <- "Central Asia (Kazakhstan)"
+
+
 # combine -----------------------------------------------------------------
 
 l_all <- list(
@@ -313,7 +379,12 @@ l_all <- list(
   tbl_20_russia,
   tbl_21_us_ne,
   tbl_22_us_nrcs,
-  tbl_23_us_snotel
+  tbl_23_us_snotel,
+  tbl_24_china,
+  tbl_25_romania,
+  tbl_26_sierra_nevada,
+  tbl_27_casia_uzbekistan,
+  tbl_28_casia_kazakhstan
 )
 
 names(l_all) <- all_sheets_manual
